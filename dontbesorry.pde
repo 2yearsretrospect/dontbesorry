@@ -1,3 +1,4 @@
+import java.util.Map;
 ArrayList <String> displayedMessages = new ArrayList <String>();
 String inputString = "";
 public void setup()
@@ -23,8 +24,6 @@ public void draw()
 	{
 		if (displayedMessages.size() == 0 || j == -1)
 			break;
-		System.out.println("i is " + i);
-		System.out.println("j is " + j);
 		fill(255);
 		text(displayedMessages.get(j), 15, i);
 		j--;
@@ -43,4 +42,13 @@ public void keyPressed()
 	}
 	else
 		inputString += key;
+}
+class Quest
+{
+	protected int progress;
+	
+	public Quest
+	{
+		progress = 0;
+	}
 }
