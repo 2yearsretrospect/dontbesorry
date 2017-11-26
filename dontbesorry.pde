@@ -1,15 +1,19 @@
 //import java.util.Map;
 ArrayList <String> displayedMessages = new ArrayList <String>();
 String inputString = "";
-Quest quest1;
-Cmd[] currentCommands = new Cmd[10];
+//Quest quest1;
+JSONObject currentCommandSet;
+JSONArray quest1;
 public void setup()
 {
 	size(800, 500);
 	PFont mono;
 	mono = loadFont("Consolas-20.vlw");
 	textFont(mono);
-	Cmd[] initialCommands_quest1 = {
+	quest1 = loadJSONArray("quest1.json");
+	currentCommandSet = quest1.getJSONObject(0);
+	displayedMessages.add(quest1.getJSONObject(0).getString("initialMessage"));
+	/*Cmd[] initialCommands_quest1 = {
 		new Cmd(
 			"walk in",
 			"You enter the elder's home. He asks you for a reminder of your name."),
@@ -20,13 +24,9 @@ public void setup()
 	quest1 = new Quest(
 		"Welcome to Don't Be Sorry! You are a member of the plebian masses of Landia, your hometown. Yesterday you turned 16, the age of coming in your rather primal society, and chose the vocation of Adventurer. You are currently standing outside your respective elder's abode, contemplating entrance and seriously doubting yesterday's decision.",
 		initialCommands_quest1
-		);
-	currentCommands = quest1.initialCommands;
-	for (Cmd cmd : currentCommands)
-	{
-		System.out.println(cmd.command);
-	}
-	displayedMessages.add(quest1.initialMessage);
+		);*/
+	//currentCommands = quest1.initialCommands;
+	
 }
 public void draw()
 {
@@ -80,15 +80,15 @@ public void keyPressed()
 	else if (key == ENTER || key == RETURN)
 	{
 		displayedMessages.add(inputString);
-		String result;
-		for (Cmd command : currentCommands)
+		//String result;
+		//for (JSONObject command : currentCommandSet.getJSONArray("commands"))
+		for (int c = 0; c < currentCommandSet.size(); c++)
 		{
-			System.out.println(command.command);
-			System.out.println(inputString);
-			if (inputString.equals(command.command))
+			JSONObject command = currentCommandSet.getJSONArray("commands").getJSONObject(c);
+			if (inputString.equals(command.getString("command")))
 			{
-				System.out.println("Success on " + command.command);
-				displayedMessages.add(command.result);
+				displayedMessages.add(command.getString("result"));
+				currentCommandSet = quest1.getJSONObject(command.getInt("next"));
 				//currentCommands = command.next.toArray(new Cmd[0]);
 				break;
 			}
