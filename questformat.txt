@@ -1,0 +1,35 @@
+Format of quest JSONs:
+
+[
+	{
+		This is a command set.
+		"id": start at 0 and increment for each object
+		"initialMessage": only for command set 0: this is the initial message displayed on bootup.
+		"commands":
+		[
+			{
+				This is a command.
+				"command": the exact characters the user types, like "walk in"
+				"result": what gets printed after the command is typed: "you walk in"
+				"next": the next command set id (like 1), or null if this ends the game.
+			}
+			{
+				This command could be "walk away"
+			}
+		]
+	}
+	{
+		This is another command set, with the options after going into the elder's house.
+		"id": 1,
+		"commands":
+		[
+			{
+				Command, result, next fields
+			}
+		]
+		"wildcardCommand":
+		{
+			This doesn't work yet.
+		}
+	}
+]
