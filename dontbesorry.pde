@@ -83,23 +83,24 @@ public void keyPressed()
 		displayedMessages.add(inputString);
 		//String result;
 		//for (JSONObject command : currentCommandSet.getJSONArray("commands"))
-		for (int c = 0; c < currentCommandSet.size(); c++)
+		boolean isCommand = false;
+		for (int c = 0; c < currentCommandSet.getJSONArray("commands").size(); c++)
 		{
 			JSONObject command = currentCommandSet.getJSONArray("commands").getJSONObject(c);
 			if (inputString.equals(command.getString("command")))
 			{
 				displayedMessages.add(command.getString("result"));
 				currentCommandSet = quest1.getJSONObject(command.getInt("next"));
+				isCommand = true;
 				//currentCommands = command.next.toArray(new Cmd[0]);
 				break;
 			}
-			//message when the input is not a pre-programmed command
-			/*else
-			{
-				displayedMessages.add("You can't do that.");
-				inputString = "";
-			}*/
 		}
+		if (isCommand == false)
+		{
+			displayedMessages.add("You can't do that.");
+		}
+
 		inputString = "";
 	}
 	else if (inputString.length() <= 70)
