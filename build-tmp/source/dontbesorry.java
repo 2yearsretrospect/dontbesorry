@@ -108,6 +108,11 @@ public void keyPressed()
 				//currentCommands = command.next.toArray(new Cmd[0]);
 				break;
 			}
+			else
+			{
+				displayedMessages.add("You can't do that.");
+				inputString = "";
+			}
 		}
 		inputString = "";
 	}

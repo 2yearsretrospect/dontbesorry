@@ -66,6 +66,7 @@ public void draw()
 	{
 		if (displayedMessages.size() == 0 || j == -1)
 			break;
+		//have to make yellow if text is game-generated
 		fill(255);
 		text(displayedMessages.get(j), 15, i);
 		j--;
@@ -92,6 +93,12 @@ public void keyPressed()
 				//currentCommands = command.next.toArray(new Cmd[0]);
 				break;
 			}
+			//message when the input is not a pre-programmed command
+			/*else
+			{
+				displayedMessages.add("You can't do that.");
+				inputString = "";
+			}*/
 		}
 		inputString = "";
 	}
