@@ -12,7 +12,7 @@
 			{
 				"command": "walk away",
 				"result": "You walk away and return to your father's farm where you work the land for the rest of your life, and even have a couple of kids. You die at the age of 34 from tuberculosis with many regrets.",
-				"next": null
+				"next": -1
 			}
 		]
 	},

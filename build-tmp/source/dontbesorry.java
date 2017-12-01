@@ -16,10 +16,42 @@ public class dontbesorry extends PApplet {
 
 //import java.util.Map;
 ArrayList <String> displayedMessages = new ArrayList <String>();
+ArrayList <int[]> displayedMessageColor = new ArrayList <int[]>();
 String inputString = "";
 //Quest quest1;
 JSONObject currentCommandSet;
 JSONArray quest1;
+
+public void addMessage(String msg, int r, int g, int b) {
+	while(msg.length() >= 71)
+	{
+		int x = 70;
+		while (msg.charAt(x) != ' ')
+		{
+			x--;
+			if (x == -1) {
+				x = 70;
+				break;
+			}
+		}
+		displayedMessages.add(msg.substring(0,x));
+		int[] rgb = {r, g, b};
+		displayedMessageColor.add(rgb);
+		msg = msg.substring(x+1);
+	}
+	displayedMessages.add(msg);
+	int[] rgb = {r, g, b};
+	displayedMessageColor.add(rgb);
+}
+//it's defined several times so we don't have to fill in rgb if we don't want
+public void addMessage(String msg, int a) {
+	addMessage(msg, a, a, a);
+}
+
+public void addMessage(String msg) {
+	addMessage(msg, 255, 255, 255);
+}
+
 public void setup()
 {
 	
@@ -28,7 +60,7 @@ public void setup()
 	textFont(mono);
 	quest1 = loadJSONArray("quest1.json");
 	currentCommandSet = quest1.getJSONObject(0);
-	displayedMessages.add(quest1.getJSONObject(0).getString("initialMessage"));
+	addMessage(quest1.getJSONObject(0).getString("initialMessage"), 255, 255, 150);
 	/*Cmd[] initialCommands_quest1 = {
 		new Cmd(
 			"walk in",
@@ -55,7 +87,7 @@ public void draw()
 	text(inputString, 15, height-15);
 	stroke(255);
 	line(0, height-40, width, height-40);
-	if (displayedMessages.size() != 0 && displayedMessages.get(displayedMessages.size()-1).length() >= 71)
+	/*if (displayedMessages.size() != 0 && displayedMessages.get(displayedMessages.size()-1).length() >= 71)
 	{
 		String left_fragment = "";
 		String right_fragment = displayedMessages.get(displayedMessages.size()-1);
@@ -76,14 +108,15 @@ public void draw()
 			displayedMessages.add(left_fragment);
 		}
 		displayedMessages.add(right_fragment);
-	}
+	}*/
 	int j = displayedMessages.size() - 1;
 	for (int i = height-60; i > 60; i -= 30)
 	{
 		if (displayedMessages.size() == 0 || j == -1)
 			break;
 		//have to make yellow if text is game-generated
-		fill(255);
+		int[] colors = displayedMessageColor.get(j);
+		fill(colors[0], colors[1], colors[2]);
 		text(displayedMessages.get(j), 15, i);
 		j--;
 	}
@@ -96,17 +129,22 @@ public void keyPressed()
 	}
 	else if (key == ENTER || key == RETURN)
 	{
-		displayedMessages.add(inputString);
-		//String result;
-		//for (JSONObject command : currentCommandSet.getJSONArray("commands"))
+		if (inputString == "")
+		{
+			return;
+		}
+		addMessage(inputString, 255);
 		boolean isCommand = false;
 		for (int c = 0; c < currentCommandSet.getJSONArray("commands").size(); c++)
 		{
 			JSONObject command = currentCommandSet.getJSONArray("commands").getJSONObject(c);
 			if (inputString.equals(command.getString("command")))
 			{
-				displayedMessages.add(command.getString("result"));
-				currentCommandSet = quest1.getJSONObject(command.getInt("next"));
+				addMessage(command.getString("result"), 255, 255, 150);
+				if (command.getInt("next") != -1)
+				{
+					currentCommandSet = quest1.getJSONObject(command.getInt("next"));
+				}
 				isCommand = true;
 				//currentCommands = command.next.toArray(new Cmd[0]);
 				break;
@@ -114,7 +152,7 @@ public void keyPressed()
 		}
 		if (isCommand == false)
 		{
-			displayedMessages.add("You can't do that.");
+			addMessage("You can't do that.", 255, 255, 150);
 		}
 
 		inputString = "";
@@ -124,7 +162,7 @@ public void keyPressed()
 		inputString += key;
 	}
 }
-class Quest
+/*class Quest
 {
 	public int progress;
 	public String initialMessage;
@@ -135,7 +173,7 @@ class Quest
 		initialMessage = initmsg;
 		initialCommands = cmdlist;
 	}
-    /*public int getProgress()
+    public int getProgress()
     {
     	return progress;
     }
@@ -143,7 +181,7 @@ class Quest
     {
     	progress++;
     	return progress;
-    }*/
+    }
 }
 
 class Cmd
@@ -156,7 +194,7 @@ class Cmd
 		command = cmd;
 		result = rslt;
 	}
-}
+}*/
   public void settings() { 	size(800, 500); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "dontbesorry" };
