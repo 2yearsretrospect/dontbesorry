@@ -1,0 +1,57 @@
+Object/location-based quest JSON
+New Rule: Arrays of objects are henceforth BANEROO'ED. just make objects holding object cuz they're simpler
+
+{
+	This is the location object. Each location in the quest is in here as an attribute, along with any location-specific commands
+	"elderhouse": {
+		"onfirstenter": {
+			A command object describing what to do when the location is first entered.
+			"display": "You enter the elder's home. He asks you for a reminder of your name.",
+			"responses": {
+				"???"
+			}
+		}
+		"onenter": {
+			A command object describing what happens on subsequent entries.
+		}
+	}
+}
+
+[
+	This is the more important object obect (ohgod). Every object in the current quest is here.
+	{
+		"name": "Player",
+		"objecttype": "player",
+	},
+	{
+		"name": "Rapping Sword of Anthrax",
+		"objecttype": "item",
+		"itemtype": "meleeweapon",
+		"type": "sword",
+		"ismagic": true,
+	},
+	{
+		"name": "Hobgoblin",
+		"objecttype": "creature",
+		"type": "hobgoblin"
+	}
+]
+
+{
+	This is the type object, stored in types.json. This allows us to define generic weapon and creature archetypes to avoid repetiton, and also be a little object-oriented.
+	"item": {
+		"itemtypes": {
+		"meleeweapon": {
+				"cmds": [
+					Things melee weapons can do.
+					"attack"
+				]
+				"types": [
+					{
+						"id": "sword"
+					}
+				]
+			}
+		}
+	}
+}

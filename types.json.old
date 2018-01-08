@@ -1,0 +1,42 @@
+[
+	{
+		"id": "item",
+		"cmds": [
+			"drop"
+		],
+		"itemtypes": [
+			{
+				"id": "meleeweapon",
+				"cmds": [
+					"attack"
+				],
+				"types": [
+					{
+						"id": "sword"
+					}
+				]
+			}
+		]
+	}
+	{
+		"id": "creature",
+		"cmds": [
+			"attack",
+			"talk"
+		],
+		"powers": [
+		],
+		"types": [
+			{
+				"type": "goblin",
+				"str": 0,
+				"dex": 0,
+				"con": 0,
+				"int": 0,
+				"wis": 0,
+				"cha": 0,
+				"ac": 0
+			}
+		]
+	}
+]

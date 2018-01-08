@@ -11,7 +11,7 @@ Format of quest JSONs:
 				This is a command.
 				"command": the exact characters the user types, like "walk in"
 				"result": what gets printed after the command is typed: "you walk in"
-				"next": the next command set id (like 1), or null if this ends the game.
+				"next": the next command set id (like 1), or -1 if this ends the game.
 			}
 			{
 				This command could be "walk away"

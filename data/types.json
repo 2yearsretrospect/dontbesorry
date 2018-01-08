@@ -1,0 +1,33 @@
+{
+	"items": {
+		"cmds": [
+			"drop"
+		],
+		"meleeweapon": {
+			"cmds": [
+				"attack"
+			],
+			"sword": {
+				"isempty": true
+			}
+		}
+	},
+	"creatures": {
+		"cmds": [
+			"attack",
+			"talk"
+		],
+		"powers": [
+		],
+		"goblin": {
+				"str": 0,
+				"dex": 0,
+				"con": 0,
+				"int": 0,
+				"wis": 0,
+				"cha": 0,
+				"ac": 0
+			}
+		}
+	}
+}

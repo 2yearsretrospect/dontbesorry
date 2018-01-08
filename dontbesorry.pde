@@ -1,10 +1,42 @@
 ArrayList <String> displayedMessages = new ArrayList <String>();
 ArrayList <int[]> displayedMessageColor = new ArrayList <int[]>();
+StringDict state = new StringDict();
+ArrayList <String> visited = new ArrayList <String>();
 String inputString = "";
-JSONObject currentCommandSet;
-JSONArray quest1;
+JSONObject quest1;
+JSONObject quest;
+JSONObject location;
+JSONObject currentCommand;
+JSONObject Types;
+JSONObject Creatures;
+JSONObject Items;
 
 public void addMessage(String msg, int r, int g, int b) {
+	if (msg == null)
+	{
+		msg = "ERROR: Attempting to add null message.";
+		r = 255;
+		g = 0;
+		b = 0;
+	}
+	while (msg.indexOf("{") != -1)
+	{
+		int start = msg.indexOf('{');
+		int end = msg.indexOf('}');
+		if (end == -1)
+		{
+			continue;
+		}
+		String varname = msg.substring(start+1, end);
+		if (state.hasKey(varname))
+		{
+			msg = msg.substring(0, start) + state.get(varname) + msg.substring(end+1);
+		}
+		else
+		{	
+			msg = msg.substring(0, start) + "???" + msg.substring(end+1);
+		}
+	}
 	while(msg.length() >= 71)
 	{
 		int x = 70;
@@ -40,23 +72,15 @@ public void setup()
 	PFont mono;
 	mono = loadFont("Consolas-20.vlw");
 	textFont(mono);
-	quest1 = loadJSONArray("quest1.json");
-	currentCommandSet = quest1.getJSONObject(0);
-	addMessage(quest1.getJSONObject(0).getString("initialMessage"), 255, 255, 150);
-	/*Cmd[] initialCommands_quest1 = {
-		new Cmd(
-			"walk in",
-			"You enter the elder's home. He asks you for a reminder of your name."),
-		new Cmd(
-			"walk away",
-			"You walk away and return to your father's farm where you work the land for the rest of your life, and even have a couple of kids. You die at the age of 34 from tuberculosis with many regrets.")
-	};
-	quest1 = new Quest(
-		"Welcome to Don't Be Sorry! You are a member of the plebian masses of Landia, your hometown. Yesterday you turned 16, the age of coming in your rather primal society, and chose the vocation of Adventurer. You are currently standing outside your respective elder's abode, contemplating entrance and seriously doubting yesterday's decision.",
-		initialCommands_quest1
-		);*/
-	//currentCommands = quest1.initialCommands;
-	
+	quest1 = loadJSONObject("quest1.json");
+	quest = loadJSONObject("quest1.json");
+	Types = loadJSONObject("types.json");
+	Creatures = Types.getJSONObject("creatures");
+	Items = Types.getJSONObject("items");
+	state.set("location", quest1.getJSONObject("start").getString("location"));
+	location = quest.getJSONObject("locations").getJSONObject(state.get("location"));
+	addMessage(location.getJSONObject("onfirstenter").getString("display"), 255, 255, 150);	
+	currentCommand = location;
 }
 public void draw()
 {
@@ -69,28 +93,6 @@ public void draw()
 	text(inputString, 15, height-15);
 	stroke(255);
 	line(0, height-40, width, height-40);
-	/*if (displayedMessages.size() != 0 && displayedMessages.get(displayedMessages.size()-1).length() >= 71)
-	{
-		String left_fragment = "";
-		String right_fragment = displayedMessages.get(displayedMessages.size()-1);
-		displayedMessages.remove(displayedMessages.size()-1);
-		while(right_fragment.length() >= 71)
-		{
-			int x = 70;
-			while (right_fragment.charAt(x) != ' ')
-			{
-				x--;
-				if (x == -1) {
-					x = 70;
-					break;
-				}
-			}
-			left_fragment = right_fragment.substring(0, x);
-			right_fragment = right_fragment.substring(x+1);
-			displayedMessages.add(left_fragment);
-		}
-		displayedMessages.add(right_fragment);
-	}*/
 	int j = displayedMessages.size() - 1;
 	for (int i = height-60; i > 60; i -= 30)
 	{
@@ -111,32 +113,155 @@ public void keyPressed()
 	}
 	else if (key == ENTER || key == RETURN)
 	{
+		//command parser
 		if (inputString == "")
 		{
 			return;
 		}
 		addMessage(inputString, 255);
-		boolean isCommand = false;
-		for (int c = 0; c < currentCommandSet.getJSONArray("commands").size(); c++)
+		boolean isWildcard = false;
+		
+		if (inputString.contains("*"))
 		{
-			JSONObject command = currentCommandSet.getJSONArray("commands").getJSONObject(c);
-			if (inputString.equals(command.getString("command")))
-			{
-				addMessage(command.getString("result"), 255, 255, 150);
-				if (command.getInt("next") != -1)
-				{
-					currentCommandSet = quest1.getJSONObject(command.getInt("next"));
-				}
-				isCommand = true;
-				//currentCommands = command.next.toArray(new Cmd[0]);
-				break;
-			}
+			//stop the wildcard processor from activating
+			addMessage("You can't do that.", 255, 255, 150);
+			inputString = "";
+			return;
 		}
-		if (isCommand == false)
+		if (inputString.startsWith("walk") || inputString.startsWith("move") || inputString.startsWith("travel"))
+		{
+			//handles location changing, currently only supports cardinal directions
+			String plocation;
+			if (inputString.endsWith("north") && !location.isNull("north"))
+			{
+				location = quest.getJSONObject("locations").getJSONObject(location.getString("north"));
+				plocation = location.getString("north");
+			}
+			else if (inputString.endsWith("south") && !location.isNull("south"))
+			{
+				location = quest.getJSONObject("locations").getJSONObject(location.getString("south"));
+				plocation = location.getString("south");
+
+			}
+			else if (inputString.endsWith("east") && !location.isNull("east"))
+			{
+				location = quest.getJSONObject("locations").getJSONObject(location.getString("east"));
+				plocation = location.getString("east");
+			}
+			else if (inputString.endsWith("west") && !location.isNull("west"))
+			{
+				location = quest.getJSONObject("locations").getJSONObject(location.getString("west"));
+				plocation = location.getString("west");
+			}
+			else if (inputString.contains(" into ")) {
+				//chop the location from the end of the string
+				plocation = inputString.substring(inputString.indexOf(" into ") + " into ".length()).toLowerCase();
+				if (!location.isNull("in") && location.getJSONArray("in").toString().contains(plocation) && !quest.getJSONObject("locations").isNull(plocation))
+				{
+					//the player wants to walk into a valid location
+					location = quest.getJSONObject("locations").getJSONObject(plocation);
+				}
+				else 
+				{
+					addMessage("You can't go there.", 255, 255, 150);
+					inputString = "";
+					return;
+				}
+			}
+			else
+			{
+				addMessage("You can't go there.", 255, 255, 150);
+				inputString = "";
+				return;
+			}
+			state.set("location", plocation);
+			if (!visited.contains(plocation) && !location.isNull("onfirstenter"))
+			{
+				currentCommand = location.getJSONObject("onfirstenter");
+				visited.add(plocation);
+			}
+			else if (!location.isNull("onenter"))
+			{
+				currentCommand = location.getJSONObject("onenter");
+			}
+			else
+			{
+				addMessage("Mysteriously, this location has no entry message.", 255, 0, 0);
+				inputString = "";
+				return;
+			}
+
+		}
+		// possible commands will be stored in one of the following, and will be searched in the following order:
+		// 1: current location
+		// 2: current command set
+		// 3: current items
+		// 4: current command set wildcards
+		else if (!location.isNull("options") && !location.getJSONObject("options").isNull(inputString))
+		{
+			// the player chose a valid non-wildcard location option
+			currentCommand = location.getJSONObject("options").getJSONObject(inputString);
+		}
+		else if (!currentCommand.isNull("options") && !currentCommand.getJSONObject("options").isNull(inputString))
+		{
+			// the player chose a valid non-wc option out of the current command set
+			currentCommand = currentCommand.getJSONObject("options").getJSONObject(inputString);
+		}
+		else if (false)
+		{
+			// leave me alone i'll implement items later i just wanna build the bloody app
+		}
+		else if (!currentCommand.isNull("options") && !currentCommand.getJSONObject("options").isNull("*"))
+		{
+			// there's a wildcard option in the current command set options
+			currentCommand = currentCommand.getJSONObject("options").getJSONObject("*");
+			isWildcard = true;
+		}
+		else
 		{
 			addMessage("You can't do that.", 255, 255, 150);
+			inputString = "";
+			return;
 		}
+		// if we've gotten this far we have a command to execute
+		addMessage(currentCommand.getString("display"), 255, 255, 150);
+		if (!currentCommand.isNull("statechange"))
+		{
+			// time to run some statechanges
+			for (int c = 0; c < currentCommand.getJSONArray("statechange").size(); c++)
+			{
+				// each change has at least three strings named "left", "op", and "right"
+				// which essentially is directly executed as (left op right)
+				// eg {"left": "thirst", "op": "=", "right": "0"} executes (thirst = 0)
+				JSONObject change = currentCommand.getJSONArray("statechange").getJSONObject(c);
+				if (change.isNull("left") || change.isNull("op") || change.isNull("right"))
+				{
+					addMessage("ERROR: Malformed statechange operation.", 255, 0, 0);
+					continue;
+				}
+				/*if (change.isNull("if"))
+				// screw it adding conditionals later
+				{
+					ArrayList<boolean> results = new ArrayList<boolean>();
+					for (JSONObject cond : change.getJSONArray("if"))
+					{
 
+					}
+				}
+				*/
+				if (isWildcard && change.getString("op") == "=")
+				{
+					// currently wildcards are only supported on the right side
+					state.set(change.getString("left"), inputString);
+				}
+				else if (change.getString("op") == "=")
+				{
+					state.set(change.getString("left"), change.getString("right"));
+				}
+				//else if (change.getString("op") == "+")
+				// more operators TBI but I WANT TO LAUNCH THE APP
+			}
+		}
 		inputString = "";
 	}
 	else if (inputString.length() <= 70)
@@ -144,36 +269,3 @@ public void keyPressed()
 		inputString += key;
 	}
 }
-/*class Quest
-{
-	public int progress;
-	public String initialMessage;
-    public Cmd[] initialCommands;
-	public Quest(String initmsg, Cmd[] cmdlist)
-	{
-		progress = 0;
-		initialMessage = initmsg;
-		initialCommands = cmdlist;
-	}
-    public int getProgress()
-    {
-    	return progress;
-    }
-    public int incProgress()
-    {
-    	progress++;
-    	return progress;
-    }
-}
-
-class Cmd
-{
-	String command;
-	String result;
-	ArrayList<Cmd> next;
-	public Cmd(String cmd, String rslt)
-	{
-		command = cmd;
-		result = rslt;
-	}
-}*/

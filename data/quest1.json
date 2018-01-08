@@ -1,34 +1,54 @@
-[
-	{
-		"id": 0,
-		"initialMessage": "Welcome to Don't Be Sorry! You are a member of the plebian masses of Landia, your hometown. Yesterday you turned 16, the age of coming in your rather primal society, and chose the vocation of Adventurer. You are currently standing outside your respective elder's abode, contemplating entrance and seriously doubting yesterday's decision.",
-		"commands":
-		[
-			{
-				"command": "walk in",
-				"result": "You enter the elder's home. He asks you for a reminder of your name.",
-				"next": 1
-			},
-			{
-				"command": "walk away",
-				"result": "You walk away and return to your father's farm where you work the land for the rest of your life, and even have a couple of kids. You die at the age of 34 from tuberculosis with many regrets.",
-				"next": -1
-			}
-		]
+{
+	"start": {
+		"location": "village"		
 	},
-	{
-		"id": 1,
-		"commands":
-		[
-			{
-				"command": "walk out",
-				"result": "The elder says, \"Wait, come back! I have so much to tell you, and I haven't even learned your name!\""
+	"locations": {
+		"village": {
+			"onfirstenter": {
+				"display": "Welcome to Don't Be Sorry! You are a member of the plebian masses of Landia, your hometown. Yesterday you turned 16, the age of coming in your rather primal society, and chose the vocation of Adventurer. You are currently standing outside your respective elder's abode, contemplating entrance and seriously doubting yesterday's decision."
+			},
+			"onenter": {
+				"display": "You stand in the village of Landia. You are in front of the elder's house in the town square."
+			},
+			"north": "forest",
+			"south": "desert",
+			"east": "wall",
+			"west": "wall",
+			"in": [
+				"elder's house"
+			],
+			"options": {
+				"drink from well": {
+					"display": "You drink from the well.",
+					"statechange": [
+						{
+							"left": "thirst",
+							"op": "=",
+							"right": "0"
+						}
+					]
+				}
 			}
-		],
-		"wildcardCommand":
-		{
-			"result": "The elder says, \"Welcome, *!\" I have much to tell you.",
-			"next": null
+		},
+		"elder's house": {
+			"onfirstenter": {
+				"display": "You enter the elder's home. He asks you for a reminder of your name.",
+				"options": {
+					"*": {
+						"display": "Welcome {name}, I have much to tell you.",
+						"statechange": [
+							{
+								"left": "name",
+								"op": "=",
+								"right": "*"
+							}
+						]
+					}
+				}
+			},
+			"onenter": {
+				"display": "The elder says, \"Welcome back, {name}!\""
+			}
 		}
 	}
-]
+}
