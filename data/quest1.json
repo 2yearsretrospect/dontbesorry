@@ -10,10 +10,10 @@
 			"onenter": {
 				"display": "You stand in the village of Landia. You are in front of the elder's house in the town square."
 			},
-			"north": "forest",
-			"south": "desert",
-			"east": "wall",
-			"west": "wall",
+			"_north": "forest",
+			"_south": "desert",
+			"_east": "wall",
+			"_west": "wall",
 			"in": [
 				"elder's house"
 			],

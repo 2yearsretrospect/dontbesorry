@@ -28,6 +28,7 @@ public void addMessage(String msg, int r, int g, int b) {
 			continue;
 		}
 		String varname = msg.substring(start+1, end);
+		System.out.println("varname: "+varname);
 		if (state.hasKey(varname))
 		{
 			msg = msg.substring(0, start) + state.get(varname) + msg.substring(end+1);
@@ -114,7 +115,7 @@ public void keyPressed()
 	else if (key == ENTER || key == RETURN)
 	{
 		//command parser
-		if (inputString == "")
+		if (inputString.equals(""))
 		{
 			return;
 		}
@@ -123,7 +124,7 @@ public void keyPressed()
 		
 		if (inputString.contains("*"))
 		{
-			//stop the wildcard processor from activating
+			//stop wildcard injection exploits
 			addMessage("You can't do that.", 255, 255, 150);
 			inputString = "";
 			return;
@@ -193,6 +194,7 @@ public void keyPressed()
 
 		}
 		// possible commands will be stored in one of the following, and will be searched in the following order:
+		// 0: global commands
 		// 1: current location
 		// 2: current command set
 		// 3: current items
@@ -224,7 +226,6 @@ public void keyPressed()
 			return;
 		}
 		// if we've gotten this far we have a command to execute
-		addMessage(currentCommand.getString("display"), 255, 255, 150);
 		if (!currentCommand.isNull("statechange"))
 		{
 			// time to run some statechanges
@@ -234,6 +235,10 @@ public void keyPressed()
 				// which essentially is directly executed as (left op right)
 				// eg {"left": "thirst", "op": "=", "right": "0"} executes (thirst = 0)
 				JSONObject change = currentCommand.getJSONArray("statechange").getJSONObject(c);
+				/*System.out.println("left: "+ change.getString("left"));
+				System.out.println("op: "+ change.getString("op"));
+				System.out.println("right: "+ change.getString("right"));
+				System.out.println("isWildcard: "+ isWildcard);*/
 				if (change.isNull("left") || change.isNull("op") || change.isNull("right"))
 				{
 					addMessage("ERROR: Malformed statechange operation.", 255, 0, 0);
@@ -249,22 +254,23 @@ public void keyPressed()
 					}
 				}
 				*/
-				if (isWildcard && change.getString("op") == "=")
+				if (isWildcard && change.getString("right").equals("*") && change.getString("op").equals("="))
 				{
 					// currently wildcards are only supported on the right side
 					state.set(change.getString("left"), inputString);
 				}
-				else if (change.getString("op") == "=")
+				else if (change.getString("op").equals("="))
 				{
 					state.set(change.getString("left"), change.getString("right"));
 				}
-				//else if (change.getString("op") == "+")
+				//else if (change.getString("op").equals("+"))
 				// more operators TBI but I WANT TO LAUNCH THE APP
 			}
 		}
+		addMessage(currentCommand.getString("display"), 255, 255, 150);
 		inputString = "";
 	}
-	else if (inputString.length() <= 70)
+	else if (inputString.length() <= 70 && Character.toString(key).matches("[a-zA-Z0-9'\" ]"))
 	{
 		inputString += key;
 	}
