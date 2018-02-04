@@ -48,7 +48,13 @@
 			},
 			"onenter": {
 				"display": "The elder says, \"Welcome back, {name}!\""
-			}
+			},
+			"objects": [
+				{
+					"name": "egg",
+					"canPickup": true
+				}
+			]
 		}
 	}
 }

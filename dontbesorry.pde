@@ -1,6 +1,7 @@
 ArrayList <String> displayedMessages = new ArrayList <String>();
 ArrayList <int[]> displayedMessageColor = new ArrayList <int[]>();
-StringDict state = new StringDict();
+//HashMap <String, Object> state = new HashMap <String, Object> ();
+GameState state = new GameState();
 ArrayList <String> visited = new ArrayList <String>();
 String inputString = "";
 JSONObject quest1;
@@ -29,9 +30,10 @@ public void addMessage(String msg, int r, int g, int b) {
 		}
 		String varname = msg.substring(start+1, end);
 		System.out.println("varname: "+varname);
-		if (state.hasKey(varname))
+		if (!state.isNull(varname))
 		{
-			msg = msg.substring(0, start) + state.get(varname) + msg.substring(end+1);
+			//we can use get() to pick up an Object which h o p e f u l l y implements toString()
+			msg = msg.substring(0, start) + state.get(varname).toString() + msg.substring(end+1);
 		}
 		else
 		{	
@@ -78,8 +80,8 @@ public void setup()
 	Types = loadJSONObject("types.json");
 	Creatures = Types.getJSONObject("creatures");
 	Items = Types.getJSONObject("items");
-	state.set("location", quest1.getJSONObject("start").getString("location"));
-	location = quest.getJSONObject("locations").getJSONObject(state.get("location"));
+	state.setString("location", quest1.getJSONObject("start").getString("location"));
+	location = quest.getJSONObject("locations").getJSONObject(state.getString("location"));
 	addMessage(location.getJSONObject("onfirstenter").getString("display"), 255, 255, 150);	
 	currentCommand = location;
 }
@@ -115,13 +117,13 @@ public void keyPressed()
 	else if (key == ENTER || key == RETURN)
 	{
 		//command parser
+		boolean display = true; //should we display the display message of currentCommand or not
 		if (inputString.equals(""))
 		{
 			return;
 		}
 		addMessage(inputString, 255);
 		boolean isWildcard = false;
-		
 		if (inputString.contains("*"))
 		{
 			//stop wildcard injection exploits
@@ -129,7 +131,7 @@ public void keyPressed()
 			inputString = "";
 			return;
 		}
-		if (inputString.startsWith("walk") || inputString.startsWith("move") || inputString.startsWith("travel"))
+		else if (inputString.startsWith("walk") || inputString.startsWith("move") || inputString.startsWith("travel"))
 		{
 			//handles location changing, currently only supports cardinal directions
 			String plocation;
@@ -175,7 +177,7 @@ public void keyPressed()
 				inputString = "";
 				return;
 			}
-			state.set("location", plocation);
+			state.setString("location", plocation);
 			if (!visited.contains(plocation) && !location.isNull("onfirstenter"))
 			{
 				currentCommand = location.getJSONObject("onfirstenter");
@@ -196,9 +198,29 @@ public void keyPressed()
 		// possible commands will be stored in one of the following, and will be searched in the following order:
 		// 0: global commands
 		// 1: current location
+		// 1.5: 
 		// 2: current command set
 		// 3: current items
 		// 4: current command set wildcards
+		else if (inputString.equals("inventory"))
+		{
+			cmd_inventory();
+			display = false;
+		}
+		else if (inputString.equals("directions"))
+		{
+			cmd_directions();
+			display = false;
+		}
+		else if (inputString.equals("observe") || inputString.equals("look"))
+		{
+			cmd_look();
+			display = false;
+		}
+		else if (inputString.startsWith("obtain"))
+		{
+
+		}
 		else if (!location.isNull("options") && !location.getJSONObject("options").isNull(inputString))
 		{
 			// the player chose a valid non-wildcard location option
@@ -235,10 +257,6 @@ public void keyPressed()
 				// which essentially is directly executed as (left op right)
 				// eg {"left": "thirst", "op": "=", "right": "0"} executes (thirst = 0)
 				JSONObject change = currentCommand.getJSONArray("statechange").getJSONObject(c);
-				/*System.out.println("left: "+ change.getString("left"));
-				System.out.println("op: "+ change.getString("op"));
-				System.out.println("right: "+ change.getString("right"));
-				System.out.println("isWildcard: "+ isWildcard);*/
 				if (change.isNull("left") || change.isNull("op") || change.isNull("right"))
 				{
 					addMessage("ERROR: Malformed statechange operation.", 255, 0, 0);
@@ -257,17 +275,21 @@ public void keyPressed()
 				if (isWildcard && change.getString("right").equals("*") && change.getString("op").equals("="))
 				{
 					// currently wildcards are only supported on the right side
-					state.set(change.getString("left"), inputString);
+					state.put(change.getString("left"), inputString);
 				}
 				else if (change.getString("op").equals("="))
 				{
-					state.set(change.getString("left"), change.getString("right"));
+					//putting Objects in there will be fine, right? Right?
+					state.put(change.getString("left"), change.getString("right"));
 				}
 				//else if (change.getString("op").equals("+"))
 				// more operators TBI but I WANT TO LAUNCH THE APP
 			}
 		}
-		addMessage(currentCommand.getString("display"), 255, 255, 150);
+		if (display == true)
+		{
+			addMessage(currentCommand.getString("display"), 255, 255, 150);
+		}
 		inputString = "";
 	}
 	else if (inputString.length() <= 70 && Character.toString(key).matches("[a-zA-Z0-9'\" ]"))
@@ -275,3 +297,176 @@ public void keyPressed()
 		inputString += key;
 	}
 }
+
+public void cmd_inventory()
+{
+	if (!state.isNull("inventory"))
+	{
+		for (int c = 0; c < state.getJSONArray("inventory").size(); c++)
+		{
+			addMessage(state.getJSONArray("inventory").getJSONObject(c).getString("name"), 255, 255, 150);
+		}
+	}
+	else
+	{
+		addMessage("Inventory empty.", 255, 255, 150);
+	}
+}
+
+public void cmd_directions()
+{
+	String res = "The current location is " + state.getString("location") + ". ";
+	String[] potentials = { "north", "south", "east", "west"};
+	boolean areCardinals = false;
+	for (String ptl : potentials)
+	{
+		if (!location.isNull(ptl))
+		{
+			areCardinals = true;
+			if (!res.equals(""))
+			{
+				res += ", ";
+			}
+			else
+			{
+				res += "This location has ";
+			}
+			res += location.getString(ptl) + " to the " + ptl;
+		}
+	}
+	if (!location.isNull("in"))
+	{
+		if (areCardinals == true)
+		{
+			res += " and within this location is ";
+		}
+		else
+		{
+			res += "This location contains ";
+		}
+		for (int c = 0; c < location.getJSONArray("in").size(); c++)
+		{
+			res += location.getJSONArray("in").getString(c) + ", ";
+		}
+	}
+	res = res.substring(0, res.length() - 2); //chop off the final comma and space
+	res += ".";
+	addMessage(res, 100, 255, 150);
+}
+
+public void cmd_look()
+{
+	if (!location.isNull("objects"))
+	{
+		for (int c = 0; c < location.getJSONArray("objects").size(); c++)
+		{
+			JSONObject item = location.getJSONArray("objects").getJSONObject(c);
+			if (item.isNull("name"))
+			{
+				addMessage("Mysterious nameless object.", 255, 0, 0);
+			}
+			if (item.isNull("canPickup") || item.getBoolean("canPickup") == false)
+			{
+				addMessage(item.getString("name"), 100, 255, 150);
+			}
+			else
+			{
+				addMessage(item.getString("name"), 150, 0, 0);
+			}
+		}
+	}
+	else
+	{
+		addMessage("Nothing to see here.", 255, 255, 150);
+	}
+}
+
+//no this is json
+/*class Item
+{
+	public String name;
+	public Item(String name)
+	{
+		this.name = name;
+	}
+}
+*/
+
+
+//oight so state is gonna wrap a JSONObject and let me serialize sh*t
+//yay for inheritance
+class GameState extends JSONObject
+{
+	//well atm this is just a jsonobject i guess
+	//content to come later
+	//haha here i am half an hour later adding functionality who would've thunk
+	//i lied
+}
+//nah lads let's do this with the raw power of json
+/*class GameState
+{
+	protected HashMap<String, String> strings = new HashMap<String, String>();
+	protected HashMap<String, int> integers = new HashMap<String, int>();
+	protected HashMap<String, ArrayList<String>> strarraylists = new HashMap<String, ArrayList<String>>();
+	public boolean putString (String k, String v)
+	{
+		if (integers.containsKey(k) || strarraylists.containsKey(k))
+		{
+			//i am currently forbidding type changes on GameState attributes
+			return false;
+		}
+		else
+		{
+			strings.put(k, v);
+			return true;
+		}
+	}
+	public boolean putInt (String k, int v)
+	{
+		if (strings.containsKey(k) || strarraylists.containsKey(k))
+		{
+			//i am currently forbidding type changes on GameState attributes
+			return false;
+		}
+		else
+		{
+			integers.put(k, v);
+			return true;
+		}
+	}
+	public boolean putStrArray (String k, ArrayList<String> v)
+	{
+		if (integers.containsKey(k) || strings.containsKey(k))
+		{
+			//i am currently forbidding type changes on GameState attributes
+			return false;
+		}
+		else
+		{
+			strarraylists.put(k, v);
+			return true;
+		}
+	}
+	public String getString(String k)
+	{
+		if (strings.containsKey(k))
+		{
+			return strings.get(k);
+		}
+		else
+		{
+			return "";
+		}
+	}
+	public int getInt(String k)
+	{
+		if (integers.containsKey(k))
+		{
+			return integers.get(k):
+		}
+		else
+		{
+			//return finishme
+		}
+	}
+	*/
